@@ -68,7 +68,7 @@ def write_corpora(sentences, output_file_handle, tagger=None):
         
 
 # 문장을 tokenize 하여 return
-def get_corpora(sentences, tagger=None):
+def get_corpora(sentences, ignore_words, tagger=None):
     if tagger is None:
         tagger = Mecab()
     target_tags = get_tags(tagger)
@@ -81,7 +81,7 @@ def get_corpora(sentences, tagger=None):
             print(f'could not {i}th parsed! sentence = {s}')
             continue
 
-        tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags]
+        tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags and t[0] not in ignore_words]
         corporas.append( ' '.join(tokenized) )
         
     return corporas       
