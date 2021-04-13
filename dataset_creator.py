@@ -7,16 +7,15 @@ from datetime import timedelta as td
 from dateutil.relativedelta import relativedelta
 
 EXTRACT_COLS = {
-    'SOR' : ['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)']
-    #'SOP' : ['장애제목', '조치 내역', '작업처리내용']
-    #'SOP' : ['서비스']
+    'SOR' : ['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'],
+    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈']
 }
 
 
 # 입력 argeunemt를 parsing하여 dictionary 형태로 반환
 '''
     python dataset_creator.py --type SOR --input_path D:/data/SOR --output_path D:/data/SOR/sor_dataset.xlsx --from_ym 201706 --to_ym 202102
-    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 201706 --to_ym 202102
+    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 202001 --to_ym 202012
 '''
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='월 별 파일에서 분류 모델 구축을 위한 dataset 생성')
@@ -60,15 +59,23 @@ def create_dataset(args):
             continue
 
         # 필요한 컬럼만 추출
-        
-        df = df[EXTRACT_COLS[args.type]]
-        df['req_ym'] = ym
-        df['co'] = df['고객사']
-        df['req_br'] = df['요청부서']
-        df['sentence'] = df['제목'] + ' . ' + df['요청사유'] + ' . ' + df['요청내역']
-        df['label'] = df['서비스유형(중)'] 
+        if args.type == 'SOR':
+            df = df[EXTRACT_COLS[args.type]]
+            df['req_ym'] = ym
+            df['co'] = df['고객사']
+            df['req_br'] = df['요청부서']
+            df['sentence'] = df['제목'] + ' . ' + df['요청사유'] + ' . ' + df['요청내역']
+            df['label'] = df['서비스유형(중)'] 
 
-        df.drop(['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'], axis=1, inplace=True)
+            df.drop(['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'], axis=1, inplace=True)
+            
+        elif args.type == 'SOP':
+            df = df[EXTRACT_COLS[args.type]]
+            df['co'] = df['고객사']
+            df['sentence'] = df['장애제목'] + ' . ' + df['상세내역']
+            df['label'] = df['서비스모듈'] 
+
+            df.drop(['고객사', '장애제목', '상세내역', '서비스모듈'], axis=1, inplace=True)
 
         dfs.append(df)
 

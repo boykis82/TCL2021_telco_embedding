@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 EXTRACT_COLS = {
     'CHG' : ['제목', '변경내용'],
     'SOR' : ['제목', '요청사유', '요청내역'],
-    'SOP' : ['장애제목', '조치 내역', '작업처리내용']
+    'SOP' : ['장애제목', '조치내역', '작업처리내용', '상세내역']
 }
 
 
@@ -17,7 +17,7 @@ EXTRACT_COLS = {
 '''
     python merge_extract.py --type CHG --input_path D:/data/변경계획서 --output_path D:/data/변경계획서/chg_merged.xlsx --from_ym 201805 --to_ym 202102
     python merge_extract.py --type SOR --input_path D:/data/SOR --output_path D:/data/SOR/sor_merged.xlsx --from_ym 202101 --to_ym 202102
-    python merge_extract.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_merged.xlsx --from_ym 202101 --to_ym 202102
+    python merge_extract.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_merged.xlsx --from_ym 202002 --to_ym 202012
 '''
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='월 별 파일에서 embedding 생성에 필요한 컬럼만 추출한 뒤 전체 월 자료 merge하여 결과 파일 생성')
