@@ -1,9 +1,13 @@
 import konlpy
-import eunjeon
 from konlpy.tag import Okt
 from konlpy.tag import Kkma
 from konlpy.tag import Komoran
-from eunjeon import Mecab
+try:
+    import eunjeon
+    from eunjeon import Mecab
+except:
+    from konlpy.tag import Mecab
+    
 import regex
 from html.parser import HTMLParser
 
