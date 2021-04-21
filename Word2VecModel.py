@@ -31,7 +31,7 @@ class Word2VecModel(object):
         min_freq_cnt = self._get_min_freq_count(corpus, max_vocab_size)
         print(f'{max_vocab_size}개의 단어 내에서 최소 빈도수는 {min_freq_cnt}입니다.')
 
-        #loss_logger = ll.LossLogger()
+        loss_logger = ll.LossLogger()
         # gensim word2vec call
         self.gensim_w2v_model = Word2Vec(corpus, 
                          size=embedding_size, 
@@ -39,10 +39,11 @@ class Word2VecModel(object):
                          min_count=min_freq_cnt,
                          sg=1, 
                          iter=epochs,
-        #                 callbacks=[loss_logger],
+                         callbacks=[loss_logger],
                          compute_loss=True,
                          window=window)
         # 저장
+        self.gensim_w2v_model.callbacks = None
         self.gensim_w2v_model.save(out_model_file_name)   
         # 후처리
         self._post_model_created()        
