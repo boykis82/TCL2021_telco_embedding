@@ -3,7 +3,10 @@ import os
 import textlib as tl
 import argparse
 
-from eunjeon import Mecab
+try:
+    from eunjeon import Mecab
+except:
+    from konlpy.tag import Mecab
 
 class InvalidInputException(Exception):
     def __init__(self, msg):

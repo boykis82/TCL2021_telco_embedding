@@ -34,11 +34,13 @@ class Word2VecModel(object):
         loss_logger = ll.LossLogger()
         # gensim word2vec call
         self.gensim_w2v_model = Word2Vec(corpus, 
-                         size=embedding_size, 
+                         #size=embedding_size,    # 윈도우에서는 size, linux에서는 embedding_size... 버전 문제인가?
+                         vector_size=embedding_size,
                          workers=workers, 
                          min_count=min_freq_cnt,
                          sg=1, 
-                         iter=epochs,
+                         #iter=epochs,   # 위와 마찬가지
+                         epochs=epochs,
                          callbacks=[loss_logger],
                          compute_loss=True,
                          window=window)
@@ -51,7 +53,8 @@ class Word2VecModel(object):
     def _post_model_created(self):
         self.vocab_size = self.gensim_w2v_model.wv.vectors.shape[0]
         self.embedding_size = self.gensim_w2v_model.wv.vectors.shape[1]
-        self.index2word = self.gensim_w2v_model.wv.index2word
+        #self.index2word = self.gensim_w2v_model.wv.index2word
+        self.index2word = self.gensim_w2v_model.wv.index_to_key        
         # unk, pad 추가
         self.index2word.append( UNK_TOKEN )
         self.index2word.append( PAD_TOKEN )    
