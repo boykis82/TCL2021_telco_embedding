@@ -99,12 +99,8 @@ def get_tags(tagger):
     elif isinstance(tagger, konlpy.tag._komoran.Komoran):
         return ['NNG', 'NNB', 'NNP', 'NP', 'NR', 'SH', 'SL', 'SN', 'VA']
     else:
-        try:
-            if isinstance(tagger, konlpy.tag._mecab.Mecab):
-                return ['VA', 'NNG', 'NNB', 'NNBC', 'NNP', 'NP', 'NR', 'SH', 'SL', 'SN', 'VA']
-        except:
-            if isinstance(tagger, eunjeon._mecab.Mecab):
-                return ['VA', 'NNG', 'NNB', 'NNBC', 'NNP', 'NP', 'NR', 'SH', 'SL', 'SN', 'VA']
-            else:
-                raise ValueError(f'invalid tagger!! {tagger.__class__}')
+        if isinstance(tagger, eunjeon._mecab.Mecab) or isinstance(tagger, konlpy.tag._mecab.Mecab):
+            return ['VA', 'NNG', 'NNB', 'NNBC', 'NNP', 'NP', 'NR', 'SH', 'SL', 'SN', 'VA']
+        else:
+            raise ValueError(f'invalid tagger!! {tagger.__class__}')
 

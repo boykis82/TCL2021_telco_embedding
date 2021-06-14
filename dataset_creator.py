@@ -8,18 +8,20 @@ from dateutil.relativedelta import relativedelta
 
 EXTRACT_COLS = {
     'SOR' : ['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'],
-    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈']
+    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈'],
+    'SOR_JIRA' : ['summary', 'description', 'components']
 }
 
 
 # 입력 argeunemt를 parsing하여 dictionary 형태로 반환
 '''
-    python dataset_creator.py --type SOR --input_path D:/data/SOR --output_path D:/data/SOR/sor_dataset.xlsx --from_ym 201706 --to_ym 202102
-    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 202001 --to_ym 202012
+    python dataset_creator.py --type SOR_JIRA --input_path D:/data/SOR_JIRA --output_path D:/data/SOR_JIRA/sor_jira_dataset.xlsx --from_ym 202006 --to_ym 202105
+    python dataset_creator.py --type SOR --input_path D:/data/SOR --output_path D:/data/SOR/sor_dataset.xlsx --from_ym 201706 --to_ym 202105
+    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 202002 --to_ym 202012
 '''
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='월 별 파일에서 분류 모델 구축을 위한 dataset 생성')
-    arg_parser.add_argument('--type', help='SOP(SOP), SOR(요청서) ...', type=str)
+    arg_parser.add_argument('--type', help='SOP(SOP), SOR(요청서), SOR_JIRA(JIRA요청서) ...', type=str)
     arg_parser.add_argument('--input_path', help='월 별 파일이 위치한 경로. 각 파일은 yyyymm.xlsx 포맷이어야 합니다.', type=str)
     arg_parser.add_argument('--output_path', help='dataset 파일이 생성될 경로(파일명 포함)', type=str)
     arg_parser.add_argument("--from_ym", help="from date : YYYYMM", type=str)
@@ -59,8 +61,8 @@ def create_dataset(args):
             continue
 
         # 필요한 컬럼만 추출
+        df = df[EXTRACT_COLS[args.type]]
         if args.type == 'SOR':
-            df = df[EXTRACT_COLS[args.type]]
             df['req_ym'] = ym
             df['co'] = df['고객사']
             df['req_br'] = df['요청부서']
@@ -70,12 +72,19 @@ def create_dataset(args):
             df.drop(['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'], axis=1, inplace=True)
             
         elif args.type == 'SOP':
-            df = df[EXTRACT_COLS[args.type]]
             df['co'] = df['고객사']
             df['sentence'] = df['장애제목'] + ' . ' + df['상세내역']
             df['label'] = df['서비스모듈'] 
 
             df.drop(['고객사', '장애제목', '상세내역', '서비스모듈'], axis=1, inplace=True)
+
+        elif args.type == 'SOR_JIRA':
+            df['req_ym'] = ym
+            df['co'] = 'SKT'
+            df['sentence'] = df['summary'] + ' . ' + df['description']
+            df['label'] = df['components'] 
+
+            df.drop(['summary', 'description', 'components'], axis=1, inplace=True)            
 
         dfs.append(df)
 
