@@ -8,7 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 EXTRACT_COLS = {
     'SOR' : ['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'],
-    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈'],
+    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈', '담당BA부서'],
     'SOR_JIRA' : ['summary', 'description', 'components']
 }
 
@@ -17,7 +17,7 @@ EXTRACT_COLS = {
 '''
     python dataset_creator.py --type SOR_JIRA --input_path D:/data/SOR_JIRA --output_path D:/data/SOR_JIRA/sor_jira_dataset.xlsx --from_ym 202006 --to_ym 202105
     python dataset_creator.py --type SOR --input_path D:/data/SOR --output_path D:/data/SOR/sor_dataset.xlsx --from_ym 201706 --to_ym 202105
-    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 202002 --to_ym 202012
+    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 202002 --to_ym 202101
 '''
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='월 별 파일에서 분류 모델 구축을 위한 dataset 생성')
@@ -59,6 +59,27 @@ def create_dataset(args):
         except FileNotFoundError:
             print(f'{input_file_name}이 없습니다! skip!')
             continue
+
+        # Swing관련된 SOP만 추출      
+        if args.type == 'SOP':  
+            df = df[(   (df['고객사'] == 'SK텔레콤') | 
+                        (df['고객사'] == 'SK브로드밴드')
+                    )
+                    &
+                    (   df['서비스 구분'] == 'Application'  )
+                    &
+                    (   (df['담당BA부서'] == '고객채널Unit') |
+                        (df['담당BA부서'] == 'Billing Unit') |
+                        (df['담당BA부서'] == '고객상품Unit') |
+                        (df['담당BA부서'] == '통신MIS Unit') |
+                        (df['담당BA부서'] == '고객서비스팀') |
+                        (df['담당BA부서'] == 'ICT혁신팀') |
+                        (df['담당BA부서'] == 'Digital Billing팀') |
+                        (df['담당BA부서'] == 'Broadband사업팀') |
+                        (df['담당BA부서'] == '채널혁신팀') |
+                        (df['담당BA부서'] == 'ICT혁신팀') |
+                        (df['담당BA부서'] == 'T Biz. Digital그룹') |
+                        (df['담당BA부서'] == 'ICT Biz. Digital그룹'))]
 
         # 필요한 컬럼만 추출
         df = df[EXTRACT_COLS[args.type]]
