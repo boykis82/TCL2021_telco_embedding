@@ -8,7 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 EXTRACT_COLS = {
     'SOR' : ['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'],
-    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈', '담당BA부서'],
+    'SOP' : ['고객사', '장애제목', '상세내역', '서비스모듈', '담당BA부서', '장애발생일시'],
     'SOR_JIRA' : ['summary', 'description', 'components']
 }
 
@@ -93,11 +93,15 @@ def create_dataset(args):
             df.drop(['제목', '요청부서', '고객사', '요청사유', '요청내역', '서비스유형(중)'], axis=1, inplace=True)
             
         elif args.type == 'SOP':
+            df['date'] = df['장애발생일시'].apply(slice_date_only)
+            
             df['co'] = df['고객사']
             df['sentence'] = df['장애제목'] + ' . ' + df['상세내역']
-            df['label'] = df['서비스모듈'] 
+            df['label_org'] = df['서비스모듈']
+            df['label_clean'] = df['서비스모듈'].apply(conv_label)
+            df['label_clean'] = df['label_clean'].apply(conv_label_etc)
 
-            df.drop(['고객사', '장애제목', '상세내역', '서비스모듈'], axis=1, inplace=True)
+            df.drop(['고객사', '장애제목', '상세내역', '서비스모듈', '장애발생일시'], axis=1, inplace=True)
 
         elif args.type == 'SOR_JIRA':
             df['req_ym'] = ym
@@ -120,6 +124,70 @@ def create_dataset(args):
         writer.save()
 
     print(f'{args.type} dataset 파일 생성 완료! {args.output_path}')
+
+def slice_date_only(datetime_):
+    return datetime_[0:8]
+
+def conv_label(label_):
+    if label_ == 'SWING  Payment' or label_ == 'SWING  수납' or label_ == 'SWING 자납' or label_ == 'SWING 수납' :
+        return 'SWING Payment'
+    elif label_ == 'SWING오더 - 번호이동/명변/해지/복지/제휴카드/보증보험' or label_ == 'SWING오더 - 고객/청구정보/정지/통계' or \
+        label_ == 'SWING 오더 - 가입/기변/할부/보조금' or label_ == 'SWING오더 - 무선오더/사업개발' :
+        return 'SWING 오더 - 무선오더'
+    elif label_.find('멤버십') >= 0:
+        return 'SWING 멤버십'
+    elif label_ == 'SKB  SWING Portal':
+        return 'SWING Portal'        
+    elif label_[0:7] == 'SKT_CTC':        
+        return 'SWING CTC-SKT'
+    elif label_ == 'B스마트플래너' or label_ == '스마트 플래너' or label_ == '스마트플래너 MMS 모바일웹':
+        return 'SWING 스마트플래너'
+    else:
+        return label_
+
+def conv_label_etc(label_):
+    if label_ != 'SWING 오더 - 무선오더' and \
+        label_ != '상품-무선' and \
+        label_ != 'SWING Payment' and \
+        label_ != 'SWING 청구' and \
+        label_ != 'SWING 유선오더' and \
+        label_ != 'SWING CTC-SKT' and \
+        label_ != 'SWING 시설' and \
+        label_ != 'SWING 유선상품' and \
+        label_ != '상품-단말기' and \
+        label_ != 'SWING 파트너관리(PRM)' and \
+        label_ != 'SWING 스마트플래너' and \
+        label_ != '상품-Interface' and \
+        label_ != 'SWING 주소' and \
+        label_ != 'SWING 자원 - 계약서관리' and \
+        label_ != '인터페이스(SMS,MMS포함)' and \
+        label_ != 'SWING 개통' and \
+        label_ != 'T gate' and \
+        label_ != 'SWING 단말' and \
+        label_ != 'SWING 미납' and \
+        label_ != 'SWING 멤버십' and \
+        label_ != 'SWING CTC-SKB' and \
+        label_ != 'SWING 모바일' and \
+        label_ != '과금정보' and \
+        label_ != '판매점 SSO' and \
+        label_ != 'SWING 장애' and \
+        label_ != 'UI, 프레임웍' and \
+        label_ != 'SWING DBM' and \
+        label_ != 'SWING SSO' and \
+        label_ != 'SWING NIS' and \
+        label_ != 'MVNO' and \
+        label_ != 'MPAMS' and \
+        label_ != 'SWING 재무/정산' and \
+        label_ != 'SWING Portal' and \
+        label_ != '소액결제-ISAS' and \
+        label_ != 'SWING 유선OSS 모바일' and \
+        label_ != '서식지통합관리' and \
+        label_ != '과금계산' and \
+        label_ != 'SKT eService-Tsales':
+        return "기타"
+    else:
+        return label_
+
 
 
 if __name__ == '__main__':
