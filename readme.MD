@@ -23,6 +23,12 @@
 > > 날짜 : 운영배포예정일을 한달 단위로 입력 (ex: 2021년 2월이면 2021-02-01 ~ 2021-02-28)
 >
 > 조회 후 변경계획서 폴더에 202102.xlsx로 저장  
+----
+## 1-4. Jira SOR
+> ### JIRA - issue조회 - 추출컬럼 : 요약, 생성됨, 설명, 구성요소
+> > 조회조건 : project = OP301 AND issuetype = SOR요청서  and created >= '2021-05-01' and created <= '2021-05-31' and component is not null order by created
+> > HTML로 download (엑셀로 받으면 인코딩 문제인지 한글이 모두 깨진다.)
+> 조회 후 SOR_JIRA폴더에 202102.xlsx로 저장    
 ----  
 # 2. 프로그램 실행법
 ## 2-1. raw data merge
@@ -43,12 +49,17 @@ python merge_extract.py --type SOR --input_path D:/data/SOR --output_path D:/dat
 
 python merge_extract.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_merged.xlsx --from_ym 202101 --to_ym 202102
 ```  
+```
+/* 월별 jira SOR를 merge한 후 필요한 컬럼만 추출하여 output_path 로 지정한 파일에 쓴다. from_ym, to_ym으로 범위 지정!  */
+
+python merge_extract.py --type SOR_JIRA --input_path D:/data/SOR_JIRA --output_path D:/data/SOR_JIRA/sor_jira_merged.xlsx --from_ym 202006 --to_ym 202105
+```
 
 ## 2-2. raw data읽어서 형태소 분리하여 말뭉치 생성 (추후 이걸 활용하여 embedding생성)
 ```
 /* 2-1에서 생성한 3개 파일(일부만 있어도 됨)를 입력으로 텍스트 전처리&형태소 분리하여 output_path에 지정한 파일에 쓴다. */
 
-python preprocess_texts.py --input_path_chg D:/data/변경계획서/chg_merged.xlsx --input_path_sor D:/data/SOR/sor_merged.xlsx --input_path_sop D:/data/SOP/sop_merged.xlsx --output_path D:/data/telco_corpora.dat
+python preprocess_texts.py --input_path_chg D:/data/변경계획서/chg_merged.xlsx --input_path_sor D:/data/SOR/sor_merged.xlsx --input_path_sop D:/data/SOP/sop_merged.xlsx --input_path_sor_jira D:/data/SOR_JIRA/sor_jira_merged.xlsx --output_path D:/data/telco_corpora.dat
 ```  
 ----  
 ## 2-3. raw data읽어서 dataset생성 
