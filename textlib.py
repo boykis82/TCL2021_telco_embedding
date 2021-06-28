@@ -55,10 +55,10 @@ def clean_text(text):
     return text
 
 # 문장을 tokenize 하여 corpus를 파일에 쓴다.
-def write_corpora(sentences, output_file_handle, tagger=None):
+def write_corpora(sentences, output_file_handle, min_token_count=5, tagger=None, isAllTag=False):
     if tagger is None:
         tagger = Mecab()    
-    target_tags = get_tags(tagger)
+    target_tags = get_tags(tagger, isAllTag)
     
     for i, s in enumerate(sentences):
         try:
@@ -67,15 +67,23 @@ def write_corpora(sentences, output_file_handle, tagger=None):
             print(f'could not {i}th parsed! sentence = {s}')
             continue
 
-        tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags]
+        if len(target_tags) == 0:
+            tokenized = [t[0].strip() for t in pos_tagged]
+        else:
+            tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags]
+
+        if len(tokenized) < min_token_count:
+            continue
         output_file_handle.write(' '.join(tokenized) + '\n')    
         
 
 # 문장을 tokenize 하여 return
-def get_corpora(sentences, ignore_words, tagger=None):
+def get_corpora(sentences, tagger=None, isAllTag=False):
     if tagger is None:
         tagger = Mecab()
-    target_tags = get_tags(tagger)
+
+    # 모든 형태소 대상이면 비어있는 배열         
+    target_tags = get_tags(tagger, isAllTag)
     
     corporas = []
     for i, s in enumerate(sentences):
@@ -85,19 +93,26 @@ def get_corpora(sentences, ignore_words, tagger=None):
             print(f'could not {i}th parsed! sentence = {s}')
             continue
 
-        tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags and t[0] not in ignore_words]
+        if len(target_tags) == 0:
+            tokenized = [t[0].strip() for t in pos_tagged]
+        else:
+            tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags]
+
         corporas.append( ' '.join(tokenized) )
         
     return corporas       
 
-# 내가 원하는 형태소만 취사선택
-def get_tags(tagger):
+# isAllTag = False -> 내가 원하는 형태소만 취사선택
+def get_tags(tagger, isAllTag=False):
+    if isAllTag:
+        return []
+
     if isinstance(tagger, konlpy.tag._okt.Okt):
         return ['Alpha', 'Noun', 'Adjective']
     elif isinstance(tagger, konlpy.tag._kkma.Kkma):
         return ['NN', 'NNG', 'NNB', 'NNM',' NNP', 'NP', 'NR', 'OH', 'OL', 'ON', 'VA', 'VXA']
     elif isinstance(tagger, konlpy.tag._komoran.Komoran):
         return ['NNG', 'NNB', 'NNP', 'NP', 'NR', 'SH', 'SL', 'SN', 'VA']
-    else:
+    else:   # 동사, 일반 명사, 의존 명사, 단위 명사, 고유 명사, 대명사, 수사, 한자, 외국어, 숫자, 형용사
         return ['VA', 'NNG', 'NNB', 'NNBC', 'NNP', 'NP', 'NR', 'SH', 'SL', 'SN', 'VA']
 

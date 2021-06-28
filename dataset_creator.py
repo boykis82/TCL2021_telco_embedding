@@ -129,7 +129,7 @@ def slice_date_only(datetime_):
     return datetime_[0:8]
 
 def conv_label(label_):
-    if label_ == 'SWING  Payment' or label_ == 'SWING  수납' or label_ == 'SWING 자납' or label_ == 'SWING 수납' :
+    if label_ == 'SWING  Payment' or label_ == 'SWING  수납' or label_ == 'SWING 자납' or label_ == 'SWING 수납' or label_ == 'SWING 재무/정산':
         return 'SWING Payment'
     elif label_ == 'SWING오더 - 번호이동/명변/해지/복지/제휴카드/보증보험' or label_ == 'SWING오더 - 고객/청구정보/정지/통계' or \
         label_ == 'SWING 오더 - 가입/기변/할부/보조금' or label_ == 'SWING오더 - 무선오더/사업개발' :
@@ -138,8 +138,8 @@ def conv_label(label_):
         return 'SWING 멤버십'
     elif label_ == 'SKB  SWING Portal':
         return 'SWING Portal'        
-    elif label_[0:7] == 'SKT_CTC':        
-        return 'SWING CTC-SKT'
+    elif label_.find('CTC') >= 0:        
+        return 'SWING CTC'
     elif label_ == 'B스마트플래너' or label_ == '스마트 플래너' or label_ == '스마트플래너 MMS 모바일웹':
         return 'SWING 스마트플래너'
     else:

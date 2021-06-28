@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 .vscode/
+.model/
 __pycache__/
 dataset/
 Untitled.ipynb

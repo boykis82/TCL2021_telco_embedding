@@ -11,6 +11,7 @@ class LossLogger(CallbackAny2Vec):
 
     def on_epoch_end(self, model):
         loss = model.get_latest_training_loss()
-        print(f'Loss after epoch {self.epoch}: {loss - self.loss_previous_step}')
+        #print(f'Loss after epoch {self.epoch}: {loss - self.loss_previous_step}')
+        print(f'Loss after epoch {self.epoch}: current loss : {loss}, previous loss : {self.loss_previous_step}, diff : {loss - self.loss_previous_step} ')
         self.epoch += 1
         self.loss_previous_step = loss        
