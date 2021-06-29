@@ -17,7 +17,7 @@ EXTRACT_COLS = {
 '''
     python dataset_creator.py --type SOR_JIRA --input_path D:/data/SOR_JIRA --output_path D:/data/SOR_JIRA/sor_jira_dataset.xlsx --from_ym 202006 --to_ym 202105
     python dataset_creator.py --type SOR --input_path D:/data/SOR --output_path D:/data/SOR/sor_dataset.xlsx --from_ym 201706 --to_ym 202105
-    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path D:/data/SOP/sop_dataset.xlsx --from_ym 202002 --to_ym 202101
+    python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path ../TCL2021_Telco_Embedding_Dataset/dataset/sop_dataset.xlsx --from_ym 202002 --to_ym 202101
 '''
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='월 별 파일에서 분류 모델 구축을 위한 dataset 생성')
@@ -151,7 +151,7 @@ def conv_label_etc(label_):
         label_ != 'SWING Payment' and \
         label_ != 'SWING 청구' and \
         label_ != 'SWING 유선오더' and \
-        label_ != 'SWING CTC-SKT' and \
+        label_ != 'SWING CTC' and \
         label_ != 'SWING 시설' and \
         label_ != 'SWING 유선상품' and \
         label_ != '상품-단말기' and \
@@ -166,7 +166,6 @@ def conv_label_etc(label_):
         label_ != 'SWING 단말' and \
         label_ != 'SWING 미납' and \
         label_ != 'SWING 멤버십' and \
-        label_ != 'SWING CTC-SKB' and \
         label_ != 'SWING 모바일' and \
         label_ != '과금정보' and \
         label_ != '판매점 SSO' and \
