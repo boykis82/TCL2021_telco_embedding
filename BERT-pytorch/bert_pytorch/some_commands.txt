@@ -1,0 +1,8 @@
+bert-vocab -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_all_tag_for_bert.dat -o ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -s 10000 -m 39
+
+bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_all_tag_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/bert_model/bert.model -l 6 -a 8 -s 128 -b 64 -e 1 -w 1 -r true
+
+
+
+python setup.py build
+python setup.py install

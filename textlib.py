@@ -75,6 +75,58 @@ def write_corpora(sentences, output_file_handle, min_token_count=5, tagger=None,
         if len(tokenized) < min_token_count:
             continue
         output_file_handle.write(' '.join(tokenized) + '\n')    
+
+
+'''
+문장을 tokenize 하여 corpus를 파일에 쓴다. pytorch bert용으로 문장이 2건 이상인 대상에 대해 \t 구분자로 2개의 문장을 한 줄에 써준다. 문장 1개짜리는 그냥 쓴다.
+
+'''
+def write_corpora_for_bert(sentences, output_file_handle, min_token_count=5, tagger=None, isAllTag=False):
+
+    if tagger is None:
+        tagger = Mecab()    
+    target_tags = get_tags(tagger, isAllTag)
+
+    tokenized1, tokenized2 = None, None
+
+    for i, s in enumerate(sentences):
+        try:
+            pos_tagged = tagger.pos(s)               
+        except ValueError:
+            print(f'could not {i}th parsed! sentence = {s}')
+            continue
+
+        if len(target_tags) == 0:
+            tokenized = [t[0].strip() for t in pos_tagged]
+        else:
+            tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags]
+
+        if len(sentences) == 1 and len(tokenized) >= min_token_count:
+            output_file_handle.write(' '.join(tokenized) + '\n')            
+        else:
+            # 첫 번째
+            if tokenized1 is None:
+                tokenized1 = tokenized
+                continue
+            else:
+                tokenized2 = tokenized
+
+            if len(tokenized1) < min_token_count and len(tokenized2) < min_token_count:
+                tokenized1 = None
+                tokenized2 = None
+            elif len(tokenized1) >= min_token_count and len(tokenized2) < min_token_count:
+                output_file_handle.write(' '.join(tokenized1) + '\n')            
+                tokenized1 = None
+                tokenized2 = None
+            elif len(tokenized1) < min_token_count and len(tokenized2) >= min_token_count:
+                output_file_handle.write(' '.join(tokenized2) + '\n')
+                tokenized1 = None
+                tokenized2 = None    
+            else:
+                output_file_handle.write(' '.join(tokenized1) + '\t' + ' '.join(tokenized2) + '\n')            
+                tokenized1 = tokenized2
+                tokenized2 = None
+        
         
 
 # 문장을 tokenize 하여 return
