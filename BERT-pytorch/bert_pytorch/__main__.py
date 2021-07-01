@@ -35,7 +35,7 @@ def train():
     parser.add_argument("--adam_beta1", type=float, default=0.9, help="adam first beta value")
     parser.add_argument("--adam_beta2", type=float, default=0.999, help="adam first beta value")
 
-    parser.add_argument("-r", "--restart", required=True, type=bool, default=False, help="restart from last checkpoint?")
+    parser.add_argument("-r", "--restart", type=bool, default=False, help="restart from last checkpoint?")
 
     args = parser.parse_args()
 
