@@ -9,7 +9,8 @@ from dateutil.relativedelta import relativedelta
 EXTRACT_COLS = {
     'CHG' : ['제목', '변경내용'],
     'SOR' : ['제목', '요청사유', '요청내역'],
-    'SOP' : ['장애제목', '조치내역', '작업처리내용', '상세내역'],
+    #'SOP' : ['장애제목', '조치내역', '작업처리내용', '상세내역'],
+    'SOP' : ['상세내역', '조치내역'],
     'SOR_JIRA' : ['summary', 'description']
 }
 

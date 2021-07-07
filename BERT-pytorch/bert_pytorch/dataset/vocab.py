@@ -64,6 +64,14 @@ class TorchVocab(object):
         else:
             assert unk_init is None and vectors_cache is None
 
+    def enum_vocab(self):
+        # sort by frequency, then alphabetically
+        words_and_frequencies = sorted(self.freqs.items(), key=lambda tup: tup[0])
+        words_and_frequencies.sort(key=lambda tup: tup[1], reverse=True)
+
+        for word, freq in words_and_frequencies:
+            print(f'{word} - {freq}')
+
     def __eq__(self, other):
         if self.freqs != other.freqs:
             return False

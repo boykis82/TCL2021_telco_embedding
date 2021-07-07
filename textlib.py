@@ -31,11 +31,33 @@ def strip_tags(html):
 
 # 문서를 문장으로 분리
 def segment_sentences(text):
-    return [w.strip() for w in regex.split("([.?!])?[\n]+|[.?!] ", text) if w is not None and len(w.strip()) > 1]
+    return [w.strip() for w in regex.split("([.?!])?[\n]+|[.?!]", text) if w is not None and len(w.strip()) > 1]
 
 # 문장 클렌징
 def clean_text(text):
     text = strip_tags(text) # remove html tags
+    
+    # SOR 템플릿 중복 삭제
+    text = regex.sub(r'요청유형상세', ' ', text)
+    text = regex.sub(r'요청유형', ' ', text)
+    text = regex.sub(r'검토/승인자성명', ' ', text)
+    text = regex.sub(r'검토/승인자사번', ' ', text)
+    text = regex.sub(r'검토승인자기간', ' ', text)
+    text = regex.sub(r'요청내용', ' ', text)
+    text = regex.sub(r'적용 시점', ' ', text)
+    text = regex.sub(r'변경 전', ' ', text)
+    text = regex.sub(r'변경 후', ' ', text)
+
+    # SOP 템플릿 중복 삭제
+    text = regex.sub(r'자산테그', ' ', text)
+    text = regex.sub(r'근무위치/요청자', ' ', text)
+    text = regex.sub(r'OA기기 정보', ' ', text)
+    text = regex.sub(r'IP주소', ' ', text)
+    text = regex.sub(r'증상/ISAC 조치 내용', ' ', text)
+
+    text = regex.sub(r'[@%\\*=()/~#&\+á?\xc3\xa1\-\|\:\;\-\,\_\~\$\'\"]', ' ', text) #remove special characters
+    text = regex.sub(r'\d+',' ', text) # remove number
+    
     text = regex.sub("(?s)<ref>.+?</ref>", "", text) # remove reference links
     text = regex.sub("(?s)<[^>]+>", "", text) # remove html tags
     text = regex.sub("&[a-z]+;", "", text) # remove html entities
@@ -76,58 +98,6 @@ def write_corpora(sentences, output_file_handle, min_token_count=5, tagger=None,
             continue
         output_file_handle.write(' '.join(tokenized) + '\n')    
 
-
-'''
-문장을 tokenize 하여 corpus를 파일에 쓴다. pytorch bert용으로 문장이 2건 이상인 대상에 대해 \t 구분자로 2개의 문장을 한 줄에 써준다. 문장 1개짜리는 그냥 쓴다.
-
-'''
-def write_corpora_for_bert(sentences, output_file_handle, min_token_count=5, tagger=None, isAllTag=False):
-
-    if tagger is None:
-        tagger = Mecab()    
-    target_tags = get_tags(tagger, isAllTag)
-
-    tokenized1, tokenized2 = None, None
-
-    for i, s in enumerate(sentences):
-        try:
-            pos_tagged = tagger.pos(s)               
-        except ValueError:
-            print(f'could not {i}th parsed! sentence = {s}')
-            continue
-
-        if len(target_tags) == 0:
-            tokenized = [t[0].strip() for t in pos_tagged]
-        else:
-            tokenized = [t[0].strip() for t in pos_tagged if t[1] in target_tags]
-
-        if len(sentences) == 1 and len(tokenized) >= min_token_count:
-            output_file_handle.write(' '.join(tokenized) + '\n')            
-        else:
-            # 첫 번째
-            if tokenized1 is None:
-                tokenized1 = tokenized
-                continue
-            else:
-                tokenized2 = tokenized
-
-            if len(tokenized1) < min_token_count and len(tokenized2) < min_token_count:
-                tokenized1 = None
-                tokenized2 = None
-            elif len(tokenized1) >= min_token_count and len(tokenized2) < min_token_count:
-                output_file_handle.write(' '.join(tokenized1) + '\n')            
-                tokenized1 = None
-                tokenized2 = None
-            elif len(tokenized1) < min_token_count and len(tokenized2) >= min_token_count:
-                output_file_handle.write(' '.join(tokenized2) + '\n')
-                tokenized1 = None
-                tokenized2 = None    
-            else:
-                output_file_handle.write(' '.join(tokenized1) + '\t' + ' '.join(tokenized2) + '\n')            
-                tokenized1 = tokenized2
-                tokenized2 = None
-        
-        
 
 # 문장을 tokenize 하여 return
 def get_corpora(sentences, tagger=None, isAllTag=False):

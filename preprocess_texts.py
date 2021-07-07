@@ -3,6 +3,8 @@ import os
 import textlib as tl
 import argparse
 
+from collections import OrderedDict
+
 try:
     from eunjeon import Mecab
 except:
@@ -36,25 +38,15 @@ def parse_arguments():
     return args
 
 
-# 여러 컬럼으로 되어 있는 텍스트를 하나의 컬럼으로 만들기 위해 vertical 방향으로 쌓는다.
-def stack_texts_vertically(df):
-    '''
-           col1    col2
-    row1    1       2  
-    row2    3       4
-
-    형태로 된 자료를
-
-          
-    1
-    3
-    2
-    4
-
-    형태로 반환한다.
-    '''
-    concat_df = pd.concat( [df.iloc[:,i] for i in range(df.shape[1])] )
-    return concat_df.drop_duplicates(keep='first', inplace=False)
+# 여러 컬럼으로 되어 있는 텍스트를 하나의 컬럼으로 만들어서 반환
+def concat_texts(df):
+    df = df.fillna(' ')
+    if df.shape[1] == 2:
+        return df.iloc[:,0] + ' . ' + df.iloc[:,1]
+    elif df.shape[1] == 3:
+        return df.iloc[:,0] + ' . ' + df.iloc[:,1] + ' . ' + df.iloc[:,2]
+    elif df.shape[1] == 4:
+        return df.iloc[:,0] + ' . ' + df.iloc[:,1] + ' . ' + df.iloc[:,2] + ' . ' + df.iloc[:,3]
 
 
 # from_date 부터 to_date까지의 파일(yyyymm.xls)을 pandas dataframe 포맷으로 merge
@@ -79,10 +71,15 @@ def preprocess_texts(args):
             except FileNotFoundError:
                 raise InvalidInputException('입력 파일이 없습니다! 경로를 확인해주세요.')
 
-            texts = stack_texts_vertically(df)  
+            texts = concat_texts(df)  
             print(f'    {texts.shape[0]} 개 존재.(중복 제거 후)')
 
             for i, text in enumerate(texts):
+                # 문장이 1개밖에 없으면 bert용에서는 삭제
+                if for_bert and len(text) <= 1:
+                    print(f'      {i+1} 번째 데이터는 문장이 1개뿐이어서 skip!')                    
+                    continue                
+
                 try:
                     cleansed_text = tl.clean_text(text)
                 except TypeError:
@@ -90,12 +87,17 @@ def preprocess_texts(args):
                     continue
 
                 sentences = tl.segment_sentences(cleansed_text)
+                sentences = list(OrderedDict.fromkeys(sentences))
+
+                if for_bert and len(sentences) <= 1:
+                    print(f'      {i+1} 번째 데이터는 중복된 문장 제거한 후 문장이 1개뿐이어서 skip!')                    
+                    continue                                    
         
+                # 은전한닢 Mecab 형태소 분석기로 문장들을 잘라 파일에 쓴다. 토큰 개수가 min_token_count 이하면 훈련에서 제외.
+                tl.write_corpora(sentences, fo, args.min_token_count, mecab, is_all_tag)
+
                 if for_bert:
-                    tl.write_corpora_for_bert(sentences, fo, args.min_token_count, mecab, is_all_tag)
-                else:
-                    # 은전한닢 Mecab 형태소 분석기로 문장들을 잘라 파일에 쓴다. 토큰 개수가 min_token_count 이하면 훈련에서 제외.
-                    tl.write_corpora(sentences, fo, args.min_token_count, mecab, is_all_tag)
+                    fo.write('\n')
 
                 if i % 5000 == 0 and i > 0:
                     print(f'      {i} 번째 데이터 처리 완료!')

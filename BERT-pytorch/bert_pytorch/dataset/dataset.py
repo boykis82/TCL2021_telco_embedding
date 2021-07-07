@@ -188,7 +188,8 @@ class BERTDataset(Dataset):
         for i, token in enumerate(tokens):
             prob = random.random()
             if prob < 0.15:
-                prob /= 0.15
+                #prob /= 0.15
+                prob = random.random()
 
                 # 80% randomly change token to mask token
                 if prob < 0.8:
@@ -198,7 +199,7 @@ class BERTDataset(Dataset):
                 elif prob < 0.9:
                     tokens[i] = random.randrange(len(self.vocab))
 
-                # 10% randomly change token to current token
+                # 10% keep
                 else:
                     tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
 
@@ -257,3 +258,95 @@ class BERTDataset(Dataset):
         else:
             return unpacked[1]
         
+
+
+class ALBERTDataset(Dataset):
+    def __init__(self, corpus_path, vocab, seq_len, encoding="utf-8"):
+        self.vocab = vocab
+        self.seq_len = seq_len
+
+        self.data = []
+
+        line1, line2 = None, None
+
+        with open(corpus_path, "r", encoding=encoding) as f:
+            for i, line in enumerate(f.readlines()):
+                if line == '\n':
+                    line1 = None
+                    line2 = None
+                    continue
+
+                if line1 is None:
+                    line1 = line
+                else:
+                    line2 = line
+                    self.data.append( (line1[:-1], line2[:-1]) )
+                    line1 = line2
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, item):
+        t1, t2, ordered_label = self.mix_sent_order(item)
+        t1_random, t1_label = self.random_word(t1)
+        t2_random, t2_label = self.random_word(t2)
+
+        # [CLS] tag = SOS tag, [SEP] tag = EOS tag
+        t1 = [self.vocab.sos_index] + t1_random + [self.vocab.eos_index]
+        t2 = t2_random + [self.vocab.eos_index]
+
+        t1_label = [self.vocab.pad_index] + t1_label + [self.vocab.pad_index]
+        t2_label = t2_label + [self.vocab.pad_index]
+
+        segment_label = ([1 for _ in range(len(t1))] + [2 for _ in range(len(t2))])[:self.seq_len]
+        bert_input = (t1 + t2)[:self.seq_len]
+        bert_label = (t1_label + t2_label)[:self.seq_len]
+
+        padding = [self.vocab.pad_index for _ in range(self.seq_len - len(bert_input))]
+        bert_input.extend(padding), bert_label.extend(padding), segment_label.extend(padding)
+
+        output = {"bert_input": bert_input,
+                  "bert_label": bert_label,
+                  "segment_label": segment_label,
+                  "ordered": ordered_label}
+
+        return {key: torch.tensor(value) for key, value in output.items()}
+
+    def random_word(self, sentence):
+        tokens = sentence.split()
+        output_label = []
+
+        for i, token in enumerate(tokens):
+            prob = random.random()
+            if prob < 0.15:
+                #prob /= 0.15
+                prob = random.random()
+
+                # 80% randomly change token to mask token
+                if prob < 0.8:
+                    tokens[i] = self.vocab.mask_index
+
+                # 10% randomly change token to random token
+                elif prob < 0.9:
+                    tokens[i] = random.randrange(len(self.vocab))
+
+                # 10% randomly change token to current token
+                else:
+                    tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
+
+                output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
+
+            else:
+                tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
+                output_label.append(0)
+
+        return tokens, output_label
+
+    def mix_sent_order(self, ndx):
+        t1, t2 = self.data[ndx][0], self.data[ndx][1]
+
+        # output_text, label(reversed:0, ordered:1)
+        if random.random() > 0.5:
+            return t1, t2, 1
+        else:
+            return t2, t1, 0            
