@@ -20,9 +20,9 @@ class BERTEmbedding(nn.Module):
         :param dropout: dropout rate
         """
         super().__init__()
-        self.token      = nn.Embedding(vocab_size, embed_size, padding_idx=0)
-        self.position   = nn.Embedding(seq_len, embed_size, padding_idx=0)
-        self.segment    = nn.Embedding(3, embed_size, padding_idx=0)    # why 3? -> 0 : padding, 1 : 1st sentence, 2 : second sentence
+        self.token      = nn.Embedding(vocab_size, embed_size)
+        self.position   = nn.Embedding(seq_len, embed_size)
+        self.segment    = nn.Embedding(2, embed_size)    
         
         self.norm       = LayerNorm(embed_size)
 

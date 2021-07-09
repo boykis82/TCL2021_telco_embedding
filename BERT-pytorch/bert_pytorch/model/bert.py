@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from .transformer import TransformerBlock
@@ -87,6 +88,6 @@ class ALBERT(nn.Module):
 
         # running over transformer block recursively
         for i in range(self.n_layers):
-            x = self.transformer_block.forward(x, mask)
+            x = self.transformer_block.forward(x, mask)        
 
         return x    

@@ -35,6 +35,8 @@ def train():
     parser.add_argument("--adam_weight_decay", type=float, default=0.01, help="weight_decay of adam")
     parser.add_argument("--adam_beta1", type=float, default=0.9, help="adam first beta value")
     parser.add_argument("--adam_beta2", type=float, default=0.999, help="adam first beta value")
+    parser.add_argument("--warmup_rate", type=float, default=-1, help="warmup rate(-1 : no warmup)")
+    parser.add_argument("--total_steps", type=float, default=-1, help="total steps(-1 : infinite)")
 
     parser.add_argument("-r", "--restart", type=bool, default=False, help="restart from last checkpoint?")
 
@@ -61,7 +63,7 @@ def train():
 
     print("Creating BERT Trainer")
     trainer = BERTTrainer(bert, args.embedding_size, vocab, train_dataloader=train_data_loader, test_dataloader=test_data_loader,
-                          lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay,
+                          lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay, warmup_rate=args.warmup_rate, total_steps=args.total_steps,
                           with_cuda=args.with_cuda, cuda_devices=args.cuda_devices, log_freq=args.log_freq)
 
     if args.restart:

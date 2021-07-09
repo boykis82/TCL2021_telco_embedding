@@ -45,9 +45,9 @@ class ALBERTLM(nn.Module):
         self.sop = SentenceOrderPrediction(self.bert.hidden)
         self.mlm = MaskedLanguageModel(self.bert.hidden, embed_size, vocab_size, embedding=self.bert.embedding.token)
 
-    def forward(self, x, segment_label):
+    def forward(self, x, segment_label, masked_pos):
         x = self.bert(x, segment_label)
-        return self.sop(x), self.mlm(x)        
+        return self.sop(x), self.mlm(x, masked_pos)        
         
 
 
@@ -90,16 +90,20 @@ class MaskedLanguageModel(nn.Module):
         self.fc    = nn.Linear(hidden, embed_size)
         self.act   = GELU()        
         self.norm  = LayerNorm(embed_size)
-        self.clsf  = nn.Linear(embed_size, vocab_size)
+        self.clsf  = nn.Linear(embed_size, vocab_size, bias=False)  # why??
+        self.clsf_bias = nn.Parameter(torch.zeros(vocab_size))      # why ??
 
         self.clsf.weight.data = embedding.weight.data        
 
-    def forward(self, x):
-        x = self.fc(x)
-        x = self.act(x)
-        x = self.norm(x)
-        x = self.clsf(x)
-        return x
+    def forward(self, x, masked_pos):
+        masked_pos = masked_pos[:, :, None].expand(-1, -1, x.size(-1))
+        h_masked = torch.gather(x, 1, masked_pos)            # B * seq_len * hidden_size -> B * #randomized token * hidden_size
+
+        h_masked = self.fc(h_masked)      # -> B * #randomized token * embed_size
+        h_masked = self.act(h_masked)
+        h_masked = self.norm(h_masked)
+        h_masked = self.clsf(h_masked) + self.clsf_bias   # -> B * #randomized token * vocab_size
+        return h_masked
 
 
 class SentenceOrderPrediction(nn.Module):
