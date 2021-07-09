@@ -50,7 +50,7 @@ def train():
 
     print("Loading Dataset", args.dataset)
     max_pred = round(args.seq_len * args.mask_prob)
-    print(f'seq_len = {args.seq_len}, mask_prob = {args.mask_prob}, max_pred = {max_pred}')
+    print(f'seq_len = {args.seq_len}, mask_prob = {args.mask_prob}, max_pred = {max_pred}, aug_cnt = {args.aug_count}')
     train_dataset, test_dataset = \
         ALBERTDataset.create_dataset(
             corpus_path=args.dataset, 

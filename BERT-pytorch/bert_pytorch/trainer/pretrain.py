@@ -241,4 +241,5 @@ class BERTTrainer:
 
     def load(self, ckpt_file_path):
         self.model = torch.load(ckpt_file_path)
+        self.model.to(self.device)
         print(f'Model Loaded From {ckpt_file_path}')
