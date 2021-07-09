@@ -8,8 +8,8 @@ __version__ = "0.0.1a4"
 with open("requirements.txt") as f:
     require_packages = [line[:-1] if line[-1] == "\n" else line for line in f]
 
-with open("README.md", "r", encoding="utf-8") as f:
-    long_description = f.read()
+#with open("README.md", "r", encoding="utf-8") as f:
+#    long_description = f.read()
 
 
 class VerifyVersionCommand(install):
@@ -35,7 +35,7 @@ setup(
     install_requires=require_packages,
     url="https://github.com/codertimo/BERT-pytorch",
     description="Google AI 2018 BERT pytorch implementation",
-    long_description=long_description,
+    long_description='ALBERT',
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",

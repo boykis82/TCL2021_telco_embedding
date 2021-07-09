@@ -25,7 +25,7 @@ class BERTTrainer:
 
     def __init__(self, bert: ALBERT, embed_size:int, vocab,
                  train_dataloader: DataLoader, test_dataloader: DataLoader = None,
-                 lr: float = 1e-3, betas=(0.9, 0.999), weight_decay: float = 0.01, warmup_rate: float = 0.05, total_steps:float = 200000,
+                 lr: float = 1e-3, betas=(0.9, 0.999), weight_decay: float = 0.01, warmup_rate: float = 0.05, total_steps:int = 1000000,
                  with_cuda: bool = True, cuda_devices=None, log_freq: int = 10):
         """
         :param bert: BERT model which you want to train
@@ -60,6 +60,7 @@ class BERTTrainer:
 
         # Setting the Adam optimizer with hyper-param
         #self.optim = AdamW(self.model.parameters(), lr=lr, betas=betas, weight_decay=weight_decay)
+        self.total_steps = total_steps
         self.optim = optim4GPU(lr, warmup_rate, total_steps, self.model)
 
         # Using Negative Log Likelihood Loss function for predicting the masked_token
@@ -190,20 +191,33 @@ class BERTTrainer:
                                              'sop accuracy': sop_acc
                                             }, global_step)                       
             '''                                            
-            self.summary_writer.add_scalar('total_loss', loss.item(), global_step)       
-            self.summary_writer.add_scalar('mlm_loss', mlm_loss.item(), global_step)       
-            self.summary_writer.add_scalar('sop_loss', sop_loss.item(), global_step)       
-            self.summary_writer.add_scalar('lr', self.optim.get_lr()[0], global_step)       
-            self.summary_writer.add_scalar('sop_acc', sop_acc, global_step)       
-            self.summary_writer.add_scalar('mlm_acc', mlm_acc, global_step)       
+            if train:
+                self.summary_writer.add_scalar('total_loss', loss.item(), global_step)       
+                self.summary_writer.add_scalar('mlm_loss', mlm_loss.item(), global_step)       
+                self.summary_writer.add_scalar('sop_loss', sop_loss.item(), global_step)       
+                self.summary_writer.add_scalar('lr', self.optim.get_lr()[0], global_step)       
+                self.summary_writer.add_scalar('sop_acc', sop_acc, global_step)       
+                self.summary_writer.add_scalar('mlm_acc', mlm_acc, global_step)       
+            else:
+                self.summary_writer.add_scalar('total_loss_test', loss.item(), global_step)       
+                self.summary_writer.add_scalar('mlm_loss_test', mlm_loss.item(), global_step)       
+                self.summary_writer.add_scalar('sop_loss_test', sop_loss.item(), global_step)       
+                self.summary_writer.add_scalar('sop_acc_test', sop_acc, global_step)       
+                self.summary_writer.add_scalar('mlm_acc_test', mlm_acc, global_step)            
 
             if i % self.log_freq == 0:
                 print(post_fix)
                 self.summary_writer.flush()    
 
+            if global_step >= self.total_steps:
+                print(f'total step completed! {global_step}')
+                break
+
         print("EP%d_%s, avg_loss=" % (epoch, str_code), sum_loss / len(data_loader), \
             "total_sop_acc=", total_correct_sop * 100.0 / total_element_sop, \
             "total_mlm_acc=", total_correct_mlm * 100.0 / total_element_mlm)
+
+        return global_step
 
     def save(self, epoch, file_path="output/bert_trained.model"):
         """
