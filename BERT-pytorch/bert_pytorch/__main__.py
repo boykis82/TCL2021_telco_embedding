@@ -92,9 +92,6 @@ def train():
         if test_data_loader is not None:
             trainer.test(epoch)
 
-        if current_step >= args.total_steps:
-            break            
-
 
 
 def get_last_ckpt_file_name(args):
