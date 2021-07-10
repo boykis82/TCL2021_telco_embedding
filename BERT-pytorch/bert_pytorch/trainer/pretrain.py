@@ -198,7 +198,7 @@ class BERTTrainer:
                 self.summary_writer.add_scalar('sop_acc', sop_acc, global_step)       
                 self.summary_writer.add_scalar('mlm_acc', mlm_acc, global_step)       
 
-            if i % self.log_freq == 0 or i == len(data_loader)-1:
+            if i % self.log_freq == 0 or i == len(data_loader):
                 print(post_fix)
                 self.summary_writer.flush()              
 
