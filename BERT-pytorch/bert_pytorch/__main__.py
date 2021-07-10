@@ -71,7 +71,7 @@ def train():
     print(f'Building ALBERT model. embed_size = {args.embedding_size}, hidden_size={args.hidden}, n_layers={args.layers}, attn_heads={args.attn_heads}, dropout={args.dropout}')
     bert = ALBERT(len(vocab), embed_size=args.embedding_size, hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads, seq_len=args.seq_len, dropout=args.dropout)
 
-    total_steps = round(len(train_dataset) / args.batch_size) * args.epochs
+    total_steps = len(train_data_loader) * args.epochs
     print(f'Creating ALBERT Trainer. lr = {args.lr}, weight_decay = {args.adam_weight_decay}, warmup_rate={args.warmup_rate}, total_steps={total_steps}, epoch = {args.epochs}')
     trainer = BERTTrainer(bert, args.embedding_size, vocab, train_dataloader=train_data_loader, test_dataloader=test_data_loader,
                           lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay, warmup_rate=args.warmup_rate, total_steps=total_steps,
