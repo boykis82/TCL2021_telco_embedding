@@ -184,7 +184,8 @@ class BERTTrainer:
                 "mlm_acc": mlm_acc,
                 "total_loss": loss.item(),
                 "mlm_loss": mlm_loss.item(),
-                "sop_loss": sop_loss.item()
+                "sop_loss": sop_loss.item(),
+                "lr": self.optim.get_lr()[0]
             }
             # tensorboard logging
             global_step = epoch * len(data_loader) + i
@@ -196,18 +197,19 @@ class BERTTrainer:
                 self.summary_writer.add_scalar('lr', self.optim.get_lr()[0], global_step)       
                 self.summary_writer.add_scalar('sop_acc', sop_acc, global_step)       
                 self.summary_writer.add_scalar('mlm_acc', mlm_acc, global_step)       
-            else:
-                self.summary_writer.add_scalar('test_total_loss', loss.item(), global_step)       
-                self.summary_writer.add_scalar('test_mlm_loss', mlm_loss.item(), global_step)       
-                self.summary_writer.add_scalar('test_sop_loss', sop_loss.item(), global_step)       
-                self.summary_writer.add_scalar('test_sop_acc', sop_acc, global_step)       
-                self.summary_writer.add_scalar('test_mlm_acc', mlm_acc, global_step)       
 
-            if i % self.log_freq == 0:
+           if i % self.log_freq == 0:
                 print(post_fix)
                 self.summary_writer.flush()              
 
         print(f'epoch {epoch}_{str_code} finished! datetime = {datetime.datetime.now()}')
+
+        if not train:
+            self.summary_writer.add_scalar('test_total_avg_loss', sum_loss / len(data_loader), epoch)       
+            self.summary_writer.add_scalar('test_mlm_avg_loss', sum_mlm_loss / len(data_loader), epoch)       
+            self.summary_writer.add_scalar('test_sop_avg_loss', sum_sop_loss / len(data_loader), epoch)       
+            self.summary_writer.add_scalar('test_sop_acc', total_correct_sop * 100.0 / total_element_sop, epoch)       
+            self.summary_writer.add_scalar('test_mlm_acc', total_correct_mlm * 100.0 / total_element_mlm, epoch)       
 
         print("EP%d_%s, avg_loss=" % (epoch, str_code), sum_loss / len(data_loader), \
             "mlm_loss=", sum_mlm_loss / len(data_loader), \
