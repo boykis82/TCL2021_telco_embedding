@@ -61,12 +61,12 @@ def train():
             mask_prob=args.mask_prob, 
             augmentation_count=args.aug_count, 
             train_ratio=args.train_ratio,
-            sample_ratio=args.sample_ratio)
+            sample_ratio=args.sample_ratio) 
     print(f'Dataset loading completed! train size = {len(train_dataset)}, test_size = {len(test_dataset)}')
 
-    print("Creating Dataloader")
     train_data_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
     test_data_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_workers)
+    print(f'Create Dataloader. train = {len(train_data_loader)}, test = {len(test_data_loader)}')
 
     print(f'Building ALBERT model. embed_size = {args.embedding_size}, hidden_size={args.hidden}, n_layers={args.layers}, attn_heads={args.attn_heads}, dropout={args.dropout}')
     bert = ALBERT(len(vocab), embed_size=args.embedding_size, hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads, seq_len=args.seq_len, dropout=args.dropout)
