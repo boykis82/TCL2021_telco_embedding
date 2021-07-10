@@ -141,7 +141,7 @@ class BERTDataset(Dataset):
 
 class ALBERTDataset(Dataset):
     @staticmethod
-    def create_dataset(corpus_path, vocab, seq_len, max_pred=10, mask_prob=0.15, augmentation_count=5, train_ratio: float=0.8, encoding="utf-8"):
+    def create_dataset(corpus_path, vocab, seq_len, max_pred=10, mask_prob=0.15, augmentation_count=5, train_ratio: float=0.8, sample_ratio: float=1.0, encoding="utf-8"):
         data = []
 
         line1, line2 = None, None
@@ -161,10 +161,11 @@ class ALBERTDataset(Dataset):
                         data.append( (line1[:-1], line2[:-1]) )
                     line1 = line2        
 
+        count = round(len(data) * sample_ratio)
         shuffle(data)
+        data = data[:count]
 
         train_cnt = int(len(data) * train_ratio)
-        test_cnt = len(data) - train_cnt
 
         train_dataset = ALBERTDataset(vocab, seq_len, data[:train_cnt], max_pred, mask_prob)
         test_dataset  = ALBERTDataset(vocab, seq_len, data[train_cnt:], max_pred, mask_prob)

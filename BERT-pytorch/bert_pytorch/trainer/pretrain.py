@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
+import datetime
 
 from .optim import optim4GPU
 
@@ -75,7 +76,7 @@ class BERTTrainer:
 
 
     def train(self, epoch):
-        self.iteration(epoch, self.train_data)
+        return self.iteration(epoch, self.train_data)
 
     def test(self, epoch):
         self.iteration(epoch, self.test_data, train=False)
@@ -102,12 +103,15 @@ class BERTTrainer:
         '''                              
 
         sum_loss = 0.0
+        sum_mlm_loss = 0.0
+        sum_sop_loss = 0.0
         total_correct_sop = 0
         total_element_sop = 0
         total_correct_mlm = 0
         total_element_mlm = 0
 
         #for i, data in data_iter:
+        print(f'epoch {epoch}_{str_code} started! datetime = {datetime.datetime.now()}')
         for i, data in enumerate(data_loader):
             # 0. batch_data will be sent into the device(GPU or cpu)
             data = {key: value.to(self.device) for key, value in data.items()}
@@ -140,7 +144,7 @@ class BERTTrainer:
 
             # 2-3. Adding next_loss and mask_loss : 3.4 Pre-training Procedure
             loss = sop_loss + mlm_loss      
-
+            
             # 3. backward and optimization only in train
             if train:
                 self.optim.zero_grad()
@@ -148,6 +152,8 @@ class BERTTrainer:
                 self.optim.step()
 
             sum_loss += loss.item()
+            sum_mlm_loss += mlm_loss.item()
+            sum_sop_loss += sop_loss.item()
 
             # SOP accuracy
             correct_sop = sent_order_output.argmax(dim=-1).eq(data["ordered"]).sum().item()
@@ -164,13 +170,13 @@ class BERTTrainer:
             masked_ids_mask = data["masked_ids"].gt(0)
             masked_ids = data["masked_ids"].masked_select(masked_ids_mask)
 
+            # 드문 경우지만 argmax한 결과가 하필 padding이면 mask와 output길이가 맞지 않음. 이 경우에는 accuracy측정 제외
             correct_mlm = mask_lm_output.eq(masked_ids).sum().item()
             total_correct_mlm += correct_mlm
-            total_element_mlm += masked_ids.nelement()            
+            total_element_mlm += masked_ids.nelement()                            
 
             mlm_acc = total_correct_mlm / total_element_mlm * 100
             
-
             post_fix = {
                 "epoch": epoch,
                 "iter": "[%d/%d]" % (i, len(data_loader)),
@@ -183,14 +189,7 @@ class BERTTrainer:
             }
             # tensorboard logging
             global_step = epoch * len(data_loader) + i
-            '''
-            self.summary_writer.add_scalars('data/scalar_grooup', 
-                                            {'total_loss': loss.item(),
-                                             'mlm_loss': mlm_loss.item(),
-                                             'sop_loss': sop_loss.item(),
-                                             'sop accuracy': sop_acc
-                                            }, global_step)                       
-            '''                                            
+
             if train:
                 self.summary_writer.add_scalar('total_loss', loss.item(), global_step)       
                 self.summary_writer.add_scalar('mlm_loss', mlm_loss.item(), global_step)       
@@ -198,22 +197,27 @@ class BERTTrainer:
                 self.summary_writer.add_scalar('lr', self.optim.get_lr()[0], global_step)       
                 self.summary_writer.add_scalar('sop_acc', sop_acc, global_step)       
                 self.summary_writer.add_scalar('mlm_acc', mlm_acc, global_step)       
-            else:
-                self.summary_writer.add_scalar('total_loss_test', loss.item(), global_step)       
-                self.summary_writer.add_scalar('mlm_loss_test', mlm_loss.item(), global_step)       
-                self.summary_writer.add_scalar('sop_loss_test', sop_loss.item(), global_step)       
-                self.summary_writer.add_scalar('sop_acc_test', sop_acc, global_step)       
-                self.summary_writer.add_scalar('mlm_acc_test', mlm_acc, global_step)            
 
-            if i % self.log_freq == 0:
-                print(post_fix)
-                self.summary_writer.flush()    
+                if i % self.log_freq == 0:
+                    print(post_fix)
+                    self.summary_writer.flush()    
 
-            if global_step >= self.total_steps:
-                print(f'total step completed! {global_step}')
-                break
+                if global_step >= self.total_steps:
+                    print(f'total step completed! {global_step}')
+                    break
+        print(f'epoch {epoch}_{str_code} finished! datetime = {datetime.datetime.now()}')
+
+        # test 시 tensorboard write
+        if not train:
+            self.summary_writer.add_scalar('total_loss_test', sum_loss / len(data_loader), epoch)       
+            self.summary_writer.add_scalar('mlm_loss_test', sum_mlm_loss / len(data_loader), epoch)       
+            self.summary_writer.add_scalar('sop_loss_test', sum_sop_loss / len(data_loader), epoch)       
+            self.summary_writer.add_scalar('sop_acc_test', total_correct_sop * 100.0 / total_element_sop, epoch)       
+            self.summary_writer.add_scalar('mlm_acc_test', total_correct_mlm * 100.0 / total_element_mlm, epoch)                        
 
         print("EP%d_%s, avg_loss=" % (epoch, str_code), sum_loss / len(data_loader), \
+            "mlm_loss=", sum_mlm_loss / len(data_loader), \
+            "sop_loss=", sum_sop_loss / len(data_loader), \
             "total_sop_acc=", total_correct_sop * 100.0 / total_element_sop, \
             "total_mlm_acc=", total_correct_mlm * 100.0 / total_element_mlm)
 

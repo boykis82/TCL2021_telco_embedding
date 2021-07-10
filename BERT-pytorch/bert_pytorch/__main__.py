@@ -1,4 +1,5 @@
 import argparse
+from random import sample
 
 from torch.utils.data import DataLoader
 
@@ -23,6 +24,7 @@ def train():
     parser.add_argument("--aug_count", type=int, default=5, help="augmentation count")
     parser.add_argument("--mask_prob", type=float, default=0.15, help="masking probability")
     parser.add_argument("--dropout", type=float, default=0.1, help="dropout")
+    parser.add_argument("--sample_ratio", type=float, default=1.0, help="sample ratio")
 
     parser.add_argument("-b", "--batch_size", type=int, default=64, help="number of batch_size")
     parser.add_argument("-e", "--epochs", type=int, default=10, help="number of epochs")
@@ -50,7 +52,7 @@ def train():
 
     print("Loading Dataset", args.dataset)
     max_pred = round(args.seq_len * args.mask_prob)
-    print(f'seq_len = {args.seq_len}, mask_prob = {args.mask_prob}, max_pred = {max_pred}, aug_cnt = {args.aug_count}')
+    print(f'seq_len = {args.seq_len}, mask_prob = {args.mask_prob}, max_pred = {max_pred}, aug_cnt = {args.aug_count}, sample_ratio = {args.sample_ratio}')
     train_dataset, test_dataset = \
         ALBERTDataset.create_dataset(
             corpus_path=args.dataset, 
@@ -59,7 +61,8 @@ def train():
             max_pred=max_pred, 
             mask_prob=args.mask_prob, 
             augmentation_count=args.aug_count, 
-            train_ratio=args.train_ratio)
+            train_ratio=args.train_ratio,
+            sample_ratio=args.sample_ratio)
     print(f'Dataset loading completed! train size = {len(train_dataset)}, test_size = {len(test_dataset)}')
 
     print("Creating Dataloader")
