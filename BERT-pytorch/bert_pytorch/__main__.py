@@ -40,7 +40,6 @@ def train():
     parser.add_argument("--adam_beta1", type=float, default=0.9, help="adam first beta value")
     parser.add_argument("--adam_beta2", type=float, default=0.999, help="adam first beta value")
     parser.add_argument("--warmup_rate", type=float, default=-1, help="warmup rate(-1 : no warmup)")
-    parser.add_argument("--total_steps", type=float, default=-1, help="total steps(-1 : infinite)")
 
     parser.add_argument("-r", "--restart", type=bool, default=False, help="restart from last checkpoint?")
 
@@ -72,9 +71,10 @@ def train():
     print(f'Building ALBERT model. embed_size = {args.embedding_size}, hidden_size={args.hidden}, n_layers={args.layers}, attn_heads={args.attn_heads}, dropout={args.dropout}')
     bert = ALBERT(len(vocab), embed_size=args.embedding_size, hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads, seq_len=args.seq_len, dropout=args.dropout)
 
-    print(f'Creating ALBERT Trainer. lr = {args.lr}, weight_decay = {args.adam_weight_decay}, warmup_rate={args.warmup_rate}, total_steps={args.total_steps}, epoch = {args.epochs}')
+    total_steps = round(len(train_dataset) / args.batch_size) * args.epochs
+    print(f'Creating ALBERT Trainer. lr = {args.lr}, weight_decay = {args.adam_weight_decay}, warmup_rate={args.warmup_rate}, total_steps={total_steps}, epoch = {args.epochs}')
     trainer = BERTTrainer(bert, args.embedding_size, vocab, train_dataloader=train_data_loader, test_dataloader=test_data_loader,
-                          lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay, warmup_rate=args.warmup_rate, total_steps=args.total_steps,
+                          lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay, warmup_rate=args.warmup_rate, total_steps=total_steps,
                           with_cuda=args.with_cuda, cuda_devices=args.cuda_devices, log_freq=args.log_freq)
 
     if args.restart:
