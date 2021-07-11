@@ -5,7 +5,7 @@ bert-vocab -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.
 bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/albert_model/albert.model -l 8 -a 8 -s 64 -hs 256 -es 128 -b 64 -e 5 -w 3 --total_steps 200000 --warmup_rate 0.05 --lr 1e-3 --aug_count 1
 
 # 가벼운 모델
-bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/albert_model/albert.model -l 12 -a 12 -s 128 -hs 512 -es 128 -b 64 -e 10 -w 4 --total_steps 600000 --warmup_rate 0.1 --lr 1e-3
+bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/albert_model/albert.model -l 8 -a 8 -s 128 -hs 256 -es 128 -b 64 -e 10 -w 3 --warmup_rate 0.05 --lr 1e-3
 
 
 python setup.py build
