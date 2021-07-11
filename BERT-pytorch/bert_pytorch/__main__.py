@@ -9,7 +9,7 @@ from .dataset import ALBERTDataset, WordVocab
 
 
 def train():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser() 
 
     parser.add_argument("-c", "--dataset", required=True, type=str, help="dataset for train bert(train+test)")
     parser.add_argument("-t", "--train_ratio", type=float, default=0.8, help="train ratio")

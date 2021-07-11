@@ -148,7 +148,7 @@ class BERTTrainer:
             loss = sop_loss + mlm_loss      
             
             # 3. backward and optimization only in train
-            if train:
+            if train: 
                 self.optim.zero_grad()
                 loss.backward()
                 self.optim.step()

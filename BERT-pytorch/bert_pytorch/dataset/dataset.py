@@ -161,7 +161,7 @@ class ALBERTDataset(Dataset):
                         data.append( (line1[:-1], line2[:-1]) )
                     line1 = line2        
 
-        count = round(len(data) * sample_ratio)
+        count = round(len(data) * sample_ratio) 
         shuffle(data)
         data = data[:count]
 
