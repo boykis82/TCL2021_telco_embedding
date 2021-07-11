@@ -1,9 +1,12 @@
-bert-vocab -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_all_tag_for_bert.dat -o ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -s 10000 -m 39
+bert-vocab -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -o ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -s 10000 -m 39
 
-bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_all_tag_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/bert_model/bert.model -l 6 -a 8 -s 128 -b 64 -e 1 -w 1 -r true
 
-# 본 모델
-bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/albert_model/albert.model -l 8 -a 8 -s 64 -hs 256 -es 128 -b 64 -e 5 -w 3 --total_steps 200000 --warmup_rate 0.05 --lr 1e-3
+# 가벼운 모델
+bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -v ../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat -o ../TCL2021_Telco_Embedding_Dataset/albert_model/albert.model -l 8 -a 8 -s 64 -hs 256 -es 128 -b 64 -e 10 -w 3 --warmup_rate 0.05 --lr 1e-3 --aug_count 3
+
+lr
+  1e-3 -> 수렴 실패
+
 
 
 python setup.py build
