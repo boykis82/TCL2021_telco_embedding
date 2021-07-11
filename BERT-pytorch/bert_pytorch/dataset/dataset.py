@@ -140,13 +140,9 @@ class BERTDataset(Dataset):
 
 
 class ALBERTDataset(Dataset):
-    def __init__(self, corpus_path, vocab, seq_len, max_pred=10, mask_prob=0.15, augmentation_count=3, encoding="utf-8"):
-        self.vocab = vocab
-        self.seq_len = seq_len
-
-        self.data = []
-        self.max_pred = max_pred
-        self.mask_prob = mask_prob
+    @staticmethod
+    def create_dataset(corpus_path, vocab, seq_len, max_pred=10, mask_prob=0.15, augmentation_count=5, train_ratio: float=0.8, sample_ratio: float=1.0, encoding="utf-8"):
+        data = []
 
         line1, line2 = None, None
 
@@ -162,11 +158,33 @@ class ALBERTDataset(Dataset):
                 else:
                     line2 = line
                     for i in range(augmentation_count):
-                        self.data.append( (line1[:-1], line2[:-1]) )
-                    line1 = line2
+                        data.append( (line1[:-1], line2[:-1]) )
+                    line1 = line2        
+
+        count = round(len(data) * sample_ratio)
+        shuffle(data)
+        data = data[:count]
+
+        train_cnt = int(len(data) * train_ratio)
+
+        train_dataset = ALBERTDataset(vocab, seq_len, data[:train_cnt], max_pred, mask_prob)
+        test_dataset  = ALBERTDataset(vocab, seq_len, data[train_cnt:], max_pred, mask_prob)
+
+        return train_dataset, test_dataset
+
+
+    def __init__(self, vocab, seq_len, data, max_pred=10, mask_prob=0.15):
+        self.vocab = vocab
+        self.seq_len = seq_len
+
+        self.data = data
+        self.max_pred = max_pred
+        self.mask_prob = mask_prob
+
 
     def __len__(self):
         return len(self.data)
+
 
     def __getitem__(self, item):
         t1, t2, ordered_label = self.mix_sent_order(item)
@@ -190,6 +208,7 @@ class ALBERTDataset(Dataset):
                   "ordered"       : ordered_label}
 
         return {key: torch.tensor(value) for key, value in output.items()}
+
 
     def mask_tokens(self, t1, t2):
         # special token 넣을 자리 확보
@@ -250,57 +269,6 @@ class ALBERTDataset(Dataset):
                 t2.pop()    
         return t1, t2               
 
-    '''
-    def random_word(self, sentence):
-        tokens = sentence.split()
-        output_label = []
-
-        # masking할 건수 구함
-        pred = min(self.max_pred, max(1, int(round(len(tokens)*self.mask_prob))))
-        cand_pos = [i for i in range(len(tokens))]
-        shuffle(cand_pos)
-
-        for pos in cand_pos[:pred]:
-            prob = random.random()
-            # 80% randomly change token to mask token
-            if prob < 0.8:
-                tokens[pos] = self.vocab.mask_index
-
-            # 10% randomly change token to random token
-            elif prob < 0.9:
-                tokens[pos] = random.randrange(len(self.vocab))
-
-            # 10% randomly change token to current token
-            else:
-                tokens[pos] = self.vocab.stoi.get(token, self.vocab.unk_index)            
-            
-
-        for i, token in enumerate(tokens):
-            prob = random.random()
-            if prob < 0.15:
-                #prob /= 0.15
-                prob = random.random()
-
-                # 80% randomly change token to mask token
-                if prob < 0.8:
-                    tokens[i] = self.vocab.mask_index
-
-                # 10% randomly change token to random token
-                elif prob < 0.9:
-                    tokens[i] = random.randrange(len(self.vocab))
-
-                # 10% randomly change token to current token
-                else:
-                    tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
-
-                output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
-
-            else:
-                tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
-                output_label.append(0)
-
-        return tokens, output_label
-    '''
 
     def mix_sent_order(self, ndx):
         t1, t2 = self.data[ndx][0], self.data[ndx][1]
