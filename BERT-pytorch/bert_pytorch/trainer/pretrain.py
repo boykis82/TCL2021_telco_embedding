@@ -74,9 +74,11 @@ class BERTTrainer:
 
 
     def train(self, epoch):
+        self.model.train()
         self.iteration(epoch, self.train_data)
 
     def test(self, epoch):
+        self.model.eval()
         self.iteration(epoch, self.test_data, train=False)
 
     def iteration(self, epoch, data_loader, train=True):

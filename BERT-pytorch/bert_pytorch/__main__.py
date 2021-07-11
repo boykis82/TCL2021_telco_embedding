@@ -20,6 +20,8 @@ def train():
     parser.add_argument("-l", "--layers", type=int, default=8, help="number of layers")
     parser.add_argument("-a", "--attn_heads", type=int, default=8, help="number of attention heads")
     parser.add_argument("-s", "--seq_len", type=int, default=20, help="maximum sequence len")
+    parser.add_argument("--aug_count", type=int, default=5, help="augmentation count")
+    parser.add_argument("--dropout", type=float, default=0.0, help="dropout")
 
     parser.add_argument("-b", "--batch_size", type=int, default=64, help="number of batch_size")
     parser.add_argument("-e", "--epochs", type=int, default=10, help="number of epochs")
@@ -47,7 +49,7 @@ def train():
     print("Vocab Size: ", len(vocab))
 
     print("Loading Train Dataset", args.train_dataset)
-    train_dataset = ALBERTDataset(args.train_dataset, vocab, seq_len=args.seq_len)
+    train_dataset = ALBERTDataset(args.train_dataset, vocab, seq_len=args.seq_len, augmentation_count=args.aug_count)
 
     print("Loading Test Dataset", args.test_dataset)
     test_dataset = ALBERTDataset(args.test_dataset, vocab, seq_len=args.seq_len) if args.test_dataset is not None else None
@@ -59,7 +61,7 @@ def train():
 
     print("Building ALBERT model")
     #bert = BERT(len(vocab), hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads)
-    bert = ALBERT(len(vocab), embed_size=args.embedding_size, hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads, seq_len=args.seq_len)
+    bert = ALBERT(len(vocab), embed_size=args.embedding_size, hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads, seq_len=args.seq_len, dropout=args.dropout)
 
     print("Creating BERT Trainer")
     trainer = BERTTrainer(bert, args.embedding_size, vocab, train_dataloader=train_data_loader, test_dataloader=test_data_loader,
