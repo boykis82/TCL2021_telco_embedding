@@ -209,7 +209,7 @@ if __name__ == '__main__':
 
     # file paths
     vocab_path = '../TCL2021_Telco_Embedding_Dataset/corpora/telco_vocab.dat'
-    albert_model_path = '../TCL2021_Telco_Embedding_Dataset/albert_model_good/albert_model_weights_only_finetuning/albert.model_weightsonly.ep3'
+    albert_model_path = '../TCL2021_Telco_Embedding_Dataset/albert_model/albert.model_weightsonly.ep7'
     clf_model_path = 'sop_clf_bert_model_checkpount.pt'
     sop_dataset_path = '../TCL2021_Telco_Embedding_Dataset/dataset/sop_dataset.xlsx'
 
