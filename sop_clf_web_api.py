@@ -80,9 +80,13 @@ label_map = {
     36: '판매점 SSO'
 }
 
+@app.get('/classlist')
+def get_class_list():
+    return label_map
+
 # uvicorn sop_clf_web_api:app --reload
 @app.get('/predict')
-def predict_sentiment(sentence):
+def predict_sop_process_part(sentence):
     print(f'----------------------- {sentence} -------------------------')
 
     # SOPDataset 생성. 안에서 전처리 & tokenizing & padding 등 수행
