@@ -1,12 +1,15 @@
 from os.path import dirname, join, realpath
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 from bert_pytorch.model import ALBERT
 from bert_pytorch.dataset import WordVocab
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.optim import Adam
 
 from sop_classfier_model_torch import SOPClassifier, SOPDataset
 
@@ -27,12 +30,15 @@ bert = ALBERT(vocab_size=len(vocab), embed_size=128, hidden=256, n_layers=8, att
 # SOP 분류기
 clf = SOPClassifier(bert, num_class, 0.0)
 
+criterion = nn.CrossEntropyLoss()
+
+optim = Adam(clf.parameters(), 1e-4)             
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # 모델 load후 평가 모드로 전환
 clf.load_state_dict(torch.load(clf_model_path))
 clf.to(device)
-clf.eval()
 
 app = FastAPI(
     title="SKT/B SOP Classfier",
@@ -100,8 +106,9 @@ def predict_sop_process_part(sentence):
     print(f'input_ids : {input_ids}')
 
     # 예측
+    clf.eval()
     pred_y = clf.forward(input_ids, segment_ids)[0]
-    pred_y = nn.functional.softmax(pred_y, dim=-1)
+    pred_y = F.softmax(pred_y, dim=-1)
     print(f'softmax : {pred_y}')
 
     # top 5에 해당되는 확률과 index 가져옴
@@ -118,3 +125,38 @@ def predict_sop_process_part(sentence):
     print(f'result: {result}')
 
     return result
+
+class SOPTrain(BaseModel):
+    sentence: str
+    expected_class: int
+    actual_class: int
+
+@app.post('/train')
+def train_one_sop(sop_train: SOPTrain):
+    if sop_train.expected_class == sop_train.actual_class:
+        return sop_train.dict()
+
+    tensor = SOPDataset([sop_train.sentence], [sop_train.actual_class], vocab, seq_len)[0]
+
+    data = {key: value.to(device) for key, value in tensor.items()}
+    # 입력의 0번째 차원이 batch size이므로 [n] -> [1,n] 으로 변환
+    input_ids = data["input_ids"].view(1,-1)
+    segment_ids = data["segment_ids"].view(1,-1)
+    actual_label = data["label"].view(1)
+
+    print(input_ids)
+    print(segment_ids)
+    print(actual_label)
+
+    # 훈련
+    clf.train()
+    pred_y = clf.forward(input_ids, segment_ids)
+    loss = F.cross_entropy(pred_y, actual_label)
+    print(f'loss : {loss.item()}')
+
+    # backpropargation
+    optim.zero_grad()
+    loss.backward()
+    optim.step()    
+    
+    return sop_train.dict()
