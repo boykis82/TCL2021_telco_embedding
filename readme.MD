@@ -102,7 +102,7 @@ python preprocess_texts.py
 python dataset_creator.py --type SOP --input_path D:/data/SOP --output_path ../TCL2021_Telco_Embedding_Dataset/dataset/sop_dataset.xlsx --from_ym 202002 --to_ym 202101
 ```  
 ----  
-# 3. Embedding 종류 별 실행 법
+# 3. Embedding
 ## A. Word2Vec (gensim)
 ### 1-C에서 만든 말뭉치 중 단어 빈도수 top 10,000여개를 대상으로 Word2Vec Embedding을 생성한다.
 
@@ -162,6 +162,7 @@ bert -c ../TCL2021_Telco_Embedding_Dataset/corpora/telco_corpora_for_bert.dat -v
 ```
 ----  
 # 4. Downstream task (SOP 처리 부서 분류기)
+3에서 만든 Embedding을 fine tuning하여 
 ## A. Word2Vec / FastText
 ```
 sop_classifier.ipynb 열어서 순서대로 실행하면 총 9개의 embedding weights를 읽어 sop분류를 수행한다.
@@ -188,11 +189,13 @@ python -W ignore sop_classifier_bert.py
          False면 나누지 않고 전체 훈련
          -> 처음 훈련 시에는 옵션을 True로 줘서 최적 하이퍼파라미터와 epoch를 찾고, 그 후에는 False로 전체 훈련 
     -e : epoch
+
+ALBERT layer 뒤쪽은 FC -> Dropout -> FC -> softmax로 구성되어 있다.
 */    
 ```
 ----  
 # 5. Deploy & Online learning
-## SOP분류기를 시험해볼 수 있는 간단한 web화면을 fastapi로 개발. 틀린 예측에 대해 바로 훈련할 수 있는 online learning기능까지 도입
+## SOP분류기를 시험해볼 수 있는 간단한 web화면을 fastapi로 개발. 틀린 예측에 대해 바로 훈련할 수 있는 online learning기능 도입 (AlBERT로 pretrain한 모델을 finetuning한 SOP분류기 내장)
 ```
 pip install fastapi
 pip install uvicorn
