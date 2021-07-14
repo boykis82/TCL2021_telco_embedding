@@ -1,4 +1,5 @@
 import multiprocessing
+import argparse
 
 # my lib
 import textlib as tl
@@ -17,7 +18,7 @@ def create_multi_w2v_model(picked_model_index, params):
         elif picked_model_index != i:
             continue
         
-        print(f'---- {i} 시작!! ----')
+        print(f'---- word2vec {i} 시작!! {corpora_file_name} -> {w2v_model_file_name_prefix + model_name} ----')
         w2v_model = wv.Word2VecModel()
         w2v_model.create(corpora_file_name, 
                            w2v_model_file_name_prefix + model_name, 
@@ -26,6 +27,29 @@ def create_multi_w2v_model(picked_model_index, params):
                            epochs=epochs,
                            window=window_size,
                            workers=WORKERS)    
+
+def create_multi_ft_model(picked_model_index, params):
+    for i, (model_name, max_vocab_size, embedding_size, window_size, epochs) in \
+            enumerate(zip(params['MODEL_NAME'],
+                          params['MAX_VOCAB_SIZE'],
+                          params['EMBEDDING_SIZE'],
+                          params['WINDOW_SIZE'],
+                          params['EPOCHS'])):
+        if picked_model_index == -1:
+            pass
+        elif picked_model_index != i:
+            continue
+        
+        print(f'---- fasttext {i} 시작!! {corpora_file_name} -> {ft_model_file_name_prefix + model_name} ----')
+        ft_model = ft.FastTextModel()
+        ft_model.create(corpora_file_name, 
+                           ft_model_file_name_prefix + model_name, 
+                           max_vocab_size=max_vocab_size, 
+                           embedding_size=embedding_size,
+                           epochs=epochs,
+                           window=window_size,
+                           workers=WORKERS)                
+                                      
 
 # 테스트로 하나만 만들자.
 
@@ -40,14 +64,14 @@ if __name__ == '__main__':
     w2v_model_prttag_file_name_prefix = '../TCL2021_Telco_Embedding_Dataset/embedding_w2v/telco_w2v_'
 
     # 모든 tag로 만든 embedding vector를 저장할 경로
-    w2v_model_alltag_file_name_prefix = '../TCL2021_Telco_Embedding_Dataset/embedding_w2v_alltag/telco_w2v_'
+    #w2v_model_alltag_file_name_prefix = '../TCL2021_Telco_Embedding_Dataset/embedding_w2v_alltag/telco_w2v_'
 
     # 모든 tag로 만든 fasttext embedding vector를 저장할 경로
     ft_model_file_name_prefix = '../TCL2021_Telco_Embedding_Dataset/embedding_fasttext/telco_ft_'
 
     # w2v 모든 형태소 사용
-    w2v_model_file_name_prefix = w2v_model_alltag_file_name_prefix
-    corpora_file_name = corpora_alltag_file_name
+    w2v_model_file_name_prefix = w2v_model_prttag_file_name_prefix
+    corpora_file_name = corpora_prttag_file_name
 
     # 여러개의 w2v 모델을 만들기 위한 table
     MODEL_COUNT = 9
@@ -63,4 +87,13 @@ if __name__ == '__main__':
         'EPOCHS': [50] * MODEL_COUNT
     }
 
-    create_multi_w2v_model(-1, W2V_TRAIN_PARAMS)
+    parser = argparse.ArgumentParser() 
+
+    parser.add_argument('-w', '--word2vec', type=str)
+    parser.add_argument('-f', '--fasttext', type=str)
+    args = parser.parse_args()    
+
+    if args.word2vec is not None and args.word2vec.lower() == "true":
+        create_multi_w2v_model(-1, W2V_TRAIN_PARAMS)
+    if args.fasttext is not None and args.fasttext.lower() == "true":
+        create_multi_ft_model(-1, W2V_TRAIN_PARAMS)
